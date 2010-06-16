@@ -74,7 +74,7 @@ Feature: iPhone integration tests
     And I tap "Curl Image"
     And I tap "Curl Image"
 
-  Scenario: Draging
+  Scenario: Dragging
     When I tap "Controls"
     And I drag from 258,285 to 319,285
     And I drag from 293,285 to 258,285
