@@ -1,0 +1,6 @@
+task :install do
+  sh "cd WaxSim && xcodebuild install DSTROOT=../../ INSTALL_PATH=/ext/bin"
+  sh "cd iCuke && rake"
+end
+
+task :default => :install

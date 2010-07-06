@@ -12,30 +12,26 @@ begin
     gem.homepage = "http://github.com/unboxed/iCuke"
     gem.authors = ["Rob Holland"]
     gem.add_dependency "cucumber", ">= 0"
-    gem.add_dependency "rb-appscript", ">= 0"
     gem.add_dependency "httparty", ">= 0"
     gem.add_dependency "nokogiri", ">= 0"
-    gem.extensions = ['ext/iCuke/Rakefile']
-    gem.files += ['ext/iCuke/libicuke.dylib']
+    gem.add_dependency "background_process"
+    gem.extensions = ['ext/Rakefile']
+    gem.files += ['ext/bin/waxsim']
+    gem.files += ['ext/iCuke/libicuke*.dylib']
+    gem.files += ['ext/WaxSim/**/*']
+    gem.files -= ['ext/WaxSim/build']
   end
   Jeweler::GemcutterTasks.new
 rescue LoadError
   puts "Jeweler (or a dependency) not available. Install it with: gem install jeweler"
 end
 
-file 'app/sdk3/build/Debug-iphonesimulator/UICatalog.app/UICatalog' do
-  ICuke::SDK.use_latest(3)
-  sh "cd app/sdk3 && xcodebuild -target UICatalog -configuration Debug -sdk #{ICuke::SDK.fullname}"
+file 'app/build/Debug-iphonesimulator/Universal.app/Universal' do
+  ICuke::SDK.use_latest
+  sh "cd app && xcodebuild -target Universal -configuration Debug -sdk #{ICuke::SDK.fullname}"
 end
-task :sdk3_app => 'app/sdk3/build/Debug-iphonesimulator/UICatalog.app/UICatalog'
-task :features => :sdk3_app
-
-file 'app/sdk4/build/Debug-iphonesimulator/UICatalog.app/UICatalog' do
-  ICuke::SDK.use_latest(4)
-  sh "cd app/sdk4 && xcodebuild -target UICatalog -configuration Debug -sdk #{ICuke::SDK.fullname}"
-end
-task :sdk4_app => 'app/sdk3/build/Debug-iphonesimulator/UICatalog.app/UICatalog'
-task :features => :sdk4_app
+task :app => 'app/build/Debug-iphonesimulator/Universal.app/Universal'
+task :features => :app
 
 task :lib do
   sh 'cd ext/iCuke && rake'

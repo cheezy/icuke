@@ -3,8 +3,8 @@ require 'nokogiri'
 class Screen
   attr_reader :xml, :x, :y, :width, :height
   
-  def initialize(root)
-    @xml = Nokogiri::XML::Document.parse(root).root
+  def initialize(xml)
+    @xml = Nokogiri::XML::Document.parse(xml).root
     frame = @xml.at_xpath('/screen/frame')
     @x, @y = frame['x'].to_f, frame['y'].to_f
     @width, @height = frame['width'].to_f, frame['height'].to_f
@@ -13,13 +13,15 @@ class Screen
   def exists?(text, scope = '')
     find_element(text, scope).any?
   end
-
+  
   def visible?(text, scope='')
-    element = find_element(text, scope).first
-    _x, _y = element_center(element)
-    return _x >= self.x && _y >= self.y && _x < self.width && _y < self.height
+    find_element(text, scope).each do |element|
+      _x, _y = element_center(element)
+      return true if _x >= self.x && _y >= self.y && _x < self.width && _y < self.height
+    end
+    return false
   end
-
+  
   def element_center(element)
     frame = element.at_xpath('./frame')
     
@@ -39,7 +41,7 @@ class Screen
         %Q{//*[#{trait(:link)} and @value="#{label}" and frame]},
         %Q{//*[@label="#{label}" and frame]}
       ).first
-    raise %Q{No element labelled "#{label}" found in: #@xml} unless element
+    raise %Q{No element labelled "#{label}" found in: #{@xml}} unless element
     element
   end
 
@@ -49,7 +51,7 @@ class Screen
         %Q{//UISlider[@label="#{label}" and frame]},
         %Q{//*[@label="#{label}"]/../UISlider}
       ).first
-    raise %Q{No element labelled "#{label}" found in: #@xml} unless element
+    raise %Q{No element labelled "#{label}" found in: #{@xml}} unless element
     element
   end
 

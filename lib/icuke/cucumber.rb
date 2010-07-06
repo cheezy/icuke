@@ -8,18 +8,27 @@ require 'icuke/screen'
 class ICukeWorld
   include ICuke::Simulate::Gestures
   
-  attr_reader :response
+  attr_reader :response, :simulator
   
   def initialize
     @simulator = ICuke::Simulator.new
   end
   
   def launch(application, options = {})
-    @simulator.launch(application, options)
+    process = ICuke::Simulator::Process.new(application, options)
+    @simulator.launch(process)
   end
   
   def quit
     @simulator.quit
+  end
+  
+  def suspend
+    @simulator.suspend
+  end
+  
+  def resume
+    @simulator.resume
   end
   
   def screen
@@ -183,29 +192,34 @@ After do
   quit
 end
 
-LIBICUKE_DIR = File.expand_path(File.dirname(__FILE__) + '/../../ext/iCuke')
-
-Given /^(?:"([^\"]*)" from )?"([^\"]*)" is loaded in the simulator(?: with SDK ([0-9.]+))?$/ do |target, project, sdk_version|
+Given /^(?:"([^\"]*)" from )?"([^\"]*)" is loaded in the (?:(iphone|ipad) )?simulator(?: with SDK ([0-9.]+))?$/ do |target, project, platform, sdk_version|
   if sdk_version
     ICuke::SDK.use(sdk_version)
+  elsif platform
+    ICuke::SDK.use_latest(platform.downcase.to_sym)
   else
     ICuke::SDK.use_latest
   end
   
   launch File.expand_path(project),
          :target => target,
+         :platform => platform,
          :env => {
-           'DYLD_LIBRARY_PATH' => LIBICUKE_DIR,
-           'DYLD_INSERT_LIBRARIES' => File.join(LIBICUKE_DIR, ICuke::SDK.dylib)
+           'DYLD_INSERT_LIBRARIES' => ICuke::SDK.dylib_fullpath
          }
 end
 
+Given /^the module "([^\"]*)" is loaded in the simulator$/ do |path|
+  path.sub!(/#{File.basename(path)}$/, ICuke::SDK.dylib(File.basename(path)))
+  simulator.load_module(File.expand_path(path))
+end
+
 Then /^I should see "([^\"]*)"(?: within "([^\"]*)")?$/ do |text, scope|
-  raise %Q{Content "#{text}" not found in: #{screen}} unless screen.exists?(text, scope)
+  raise %Q{Content "#{text}" not found in: #{screen.xml}} unless screen.visible?(text, scope)
 end
 
 Then /^I should not see "([^\"]*)"(?: within "([^\"]*)")?$/ do |text, scope|
-  raise %Q{Content "#{text}" was found but was not expected in: #{screen}} if screen.exists?(text, scope)
+  raise %Q{Content "#{text}" was found but was not expected in: #{screen.xml}} if screen.visible?(text, scope)
 end
 
 When /^I tap "([^\"]*)"$/ do |label|
@@ -234,6 +248,14 @@ When /^I scroll (down|up|left|right)(?: to "([^\"]*)")?$/ do |direction, text|
   else
     scroll(direction.to_sym)
   end
+end
+
+When /^I suspend the application/ do
+  suspend
+end
+
+When /^I resume the application/ do
+  resume
 end
 
 Then /^I put the phone into recording mode$/ do
