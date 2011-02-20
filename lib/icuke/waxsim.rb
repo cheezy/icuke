@@ -9,7 +9,6 @@ module ICuke
     
     def launch(process)
       process = process.with_options({
-        :configuration => 'Debug',
         :env => {
           'CFFIXED_USER_HOME' => Dir.mktmpdir
         }
@@ -44,6 +43,8 @@ module ICuke
     end
     
     class Process
+      DEFAULT_CONFIGURATION = 'Debug'
+      
       def initialize(project_file, launch_options = {})
         @project_file = project_file
         @launch_options = launch_options
@@ -55,17 +56,21 @@ module ICuke
       end
       
       def command
-        ICuke::SDK.launch("#{directory}/#{app_name}.app", @launch_options[:platform], @launch_options[:env])
+        ICuke::SDK.launch("#{directory}/#{target}.app", @launch_options[:platform], @launch_options[:env])
       end
       
       private
       
-      def app_name
-        File.basename(@project_file, '.xcodeproj')
+      def target
+        @launch_options[:target] || File.basename(@project_file, '.xcodeproj')
+      end
+      
+      def build_configuration
+        @launch_options[:build_configuration] || DEFAULT_CONFIGURATION
       end
       
       def directory
-        "#{File.dirname(@project_file)}/build/#{@launch_options[:configuration]}-iphonesimulator"
+        "#{File.dirname(@project_file)}/build/#{build_configuration}-iphonesimulator"
       end
     end
   end

@@ -5,6 +5,9 @@
 
 .svn
 
+## VIM
+*.swp
+
 ## PROJECT::GENERAL
 rdoc
 pkg
@@ -13,3 +16,4 @@ pkg
 events.plist
 
 bin/waxsim
+
